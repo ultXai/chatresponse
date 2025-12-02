@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Ответ нейросети</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pako/2.1.0/pako.min.js" integrity="sha512-MmKzBSSMSmc5QwDFi1Cdm42Hcps225y7sY9qsut0kGugHgdGXN53BJ38qRAjPR9U1FVLtZL1NVr7DiIP9N6byw==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
     <style>
         * {
             margin: 0;
@@ -127,8 +128,8 @@
                     return;
                 }
 
-                // Парсим параметры из hash (формат: #text=encoded_text)
-                const match = hash.match(/text=([^&]*)/);
+                // Парсим параметры из hash (формат: #data=encoded_text)
+                const match = hash.match(/data=([^&]*)/);
                 if (!match || !match[1]) {
                     document.getElementById('content').innerHTML = 
                         '<div class="error">❌ Текст ответа не найден</div>';
@@ -137,12 +138,18 @@
 
                 const encodedText = match[1];
 
-                // Декодируем base64
+                // Декодируем base64 и распаковываем
                 try {
-                    const decodedText = atob(decodeURIComponent(encodedText));
-                    
-                    // Форматируем текст (заменяем переносы строк на <br>)
-                    const formattedText = decodedText
+                    const binaryString = atob(decodeURIComponent(encodedText));
+                    const len = binaryString.length;
+                    const bytes = new Uint8Array(len);
+                    for (let i = 0; i < len; i++) {
+                        bytes[i] = binaryString.charCodeAt(i);
+                    }
+
+                    const decompressed = pako.inflate(bytes, { to: 'string' });
+
+                    const formattedText = decompressed
                         .replace(/\n/g, '<br>')
                         .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
                         .replace(/\*(.*?)\*/g, '<em>$1</em>');
