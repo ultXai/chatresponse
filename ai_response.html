@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ответ нейросети</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            max-width: 900px;
+            width: 100%;
+            padding: 40px;
+            margin: 20px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid #f0f0f0;
+        }
+
+        .header h1 {
+            color: #333;
+            font-size: 28px;
+            margin-bottom: 10px;
+        }
+
+        .header .emoji {
+            font-size: 48px;
+            margin-bottom: 10px;
+        }
+
+        .content {
+            color: #444;
+            line-height: 1.8;
+            font-size: 16px;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            padding: 20px;
+            background: #f9f9f9;
+            border-radius: 10px;
+            border-left: 4px solid #667eea;
+        }
+
+        .content p {
+            margin-bottom: 15px;
+        }
+
+        .footer {
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 2px solid #f0f0f0;
+            text-align: center;
+            color: #666;
+            font-size: 14px;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+        }
+
+        .error {
+            text-align: center;
+            padding: 40px;
+            color: #e74c3c;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 20px;
+                margin: 10px;
+            }
+
+            .header h1 {
+                font-size: 24px;
+            }
+
+            .content {
+                font-size: 14px;
+                padding: 15px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="emoji">🧩</div>
+            <h1>Ответ нейросети</h1>
+        </div>
+        <div id="content" class="loading">Загрузка...</div>
+        <div class="footer">
+            <p>Telegram AI Bot</p>
+        </div>
+    </div>
+
+    <script>
+        function decodeResponse() {
+            try {
+                // Получаем hash из URL
+                const hash = window.location.hash.substring(1); // Убираем #
+                
+                if (!hash) {
+                    document.getElementById('content').innerHTML = 
+                        '<div class="error">❌ Текст ответа не найден в URL</div>';
+                    return;
+                }
+
+                // Парсим параметры из hash (формат: #text=encoded_text)
+                const match = hash.match(/text=([^&]*)/);
+                if (!match || !match[1]) {
+                    document.getElementById('content').innerHTML = 
+                        '<div class="error">❌ Текст ответа не найден</div>';
+                    return;
+                }
+
+                const encodedText = match[1];
+
+                // Декодируем base64
+                try {
+                    const decodedText = atob(decodeURIComponent(encodedText));
+                    
+                    // Форматируем текст (заменяем переносы строк на <br>)
+                    const formattedText = decodedText
+                        .replace(/\n/g, '<br>')
+                        .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+                        .replace(/\*(.*?)\*/g, '<em>$1</em>');
+
+                    document.getElementById('content').innerHTML = 
+                        '<div class="content">' + formattedText + '</div>';
+                } catch (decodeError) {
+                    console.error('Decode error:', decodeError);
+                    document.getElementById('content').innerHTML = 
+                        '<div class="error">❌ Ошибка декодирования текста</div>';
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                document.getElementById('content').innerHTML = 
+                    '<div class="error">❌ Произошла ошибка при загрузке ответа</div>';
+            }
+        }
+
+        // Выполняем декодирование при загрузке страницы
+        window.addEventListener('DOMContentLoaded', decodeResponse);
+        
+        // Также обрабатываем изменения hash (если URL изменится)
+        window.addEventListener('hashchange', decodeResponse);
+    </script>
+</body>
+</html>
+
